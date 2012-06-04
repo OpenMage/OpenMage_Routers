@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Lokey_Routers>
+            <version>1.0.0</version>
+        </Lokey_Routers>
+    </modules>
+    <default>
+        <web>
+            <routers>
+                <admin>
+                    <class>Lokey_Routers_Router_Admin</class>
+                </admin>
+                <standard>
+                    <class>Lokey_Routers_Router_Standard</class>
+                </standard>
+            </routers>
+        </web>
+    </default>
+    <stores>
+        <default>
+            <web>
+                <routers>
+                    <admin>
+                        <class>Lokey_Routers_Router_Admin</class>
+                    </admin>
+                    <standard>
+                        <class>Lokey_Routers_Router_Standard</class>
+                    </standard>
+                </routers>
+            </web>
+        </default>
+    </stores>
+</config>
