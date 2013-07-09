@@ -22,37 +22,29 @@ class Lokey_Routers_Standard extends Mage_Core_Controller_Varien_Router_Standard
     /**
      * Match the request
      *
+     * This is actually a wrapper for the real match method
+     * The wrapper adds the ability of having '/' characters
+     * in the frontName
+     *
      * @param Zend_Controller_Request_Http $request
      *
      * @return boolean
      */
     public function match(Zend_Controller_Request_Http $request)
     {
-        /**
-         * Fail Fast
-         *
-         * There is no need to run code if there are:
-         *  - no extended frontNames
-         *  - a manually selected module name
-         */
+        // There is no need to run this code if there are no extended frontNames or a manually selected module name
         if (!$this->_extendedSearchActive || $request->getModuleName()) {
             return parent::match($request);
         }
 
-        //checking before even try to find out that current module
-        //should use this router
-        // NB: this check will be run twice due to the way we are extending the core router
+        // This check will be run twice due to the unobtrusive way we are extending the core router
         if (!$this->_beforeModuleMatch()) {
             return false;
         }
 
         $originalPath = trim($request->getPathInfo(), '/');
 
-        /**
-         * Fail Fast
-         *
-         * There is no need to run this if it's an empty path
-         */
+        // There is no need to run this if it's an empty path
         if (!$originalPath) {
             return parent::match($request);
         }
@@ -64,7 +56,7 @@ class Lokey_Routers_Standard extends Mage_Core_Controller_Varien_Router_Standard
         $frontName = $this->_extractFrontName($workingPath);
 
         if (strpos($frontName, '/') === false) {
-            // Bypass request modification when there is not extended frontName match
+            // Bypass request modification when there is no extended frontName match
             return parent::match($request);
         } else {
             // Change request PATH_INFO to replace real frontName with fake one

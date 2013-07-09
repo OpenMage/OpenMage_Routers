@@ -25,10 +25,15 @@ class Lokey_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
     protected $_adminFrontName;
 
     /**
+     * @var bool
+     */
+    protected $_applyNoRoute = true;
+
+    /**
      * Match the request
      *
      * This is actually a wrapper for the real match method
-     * The wrapper adds the ability og having '/' characters
+     * The wrapper adds the ability of having '/' characters
      * in the frontName
      *
      * @param Zend_Controller_Request_Http $request
@@ -37,59 +42,58 @@ class Lokey_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
      */
     public function match(Zend_Controller_Request_Http $request)
     {
-        /**
-         * Fail Fast
-         *
-         * There is no need to run code if there are:
-         *  - no extended frontNames
-         *  - a manually selected module name
-         */
+        // There is no need to run this code if there are no extended frontNames or a manually selected module name
         if (!$this->_extendedSearchActive || $request->getModuleName()) {
             return parent::match($request);
         }
 
-        //checking before even try to find out that current module
-        //should use this router
-        // NB: this check will be run twice due to the way we are extending the core router
+        // This check will be run twice due to the unobtrusive way we are extending the core router
         if (!$this->_beforeModuleMatch()) {
             return false;
         }
 
         $originalPath = trim($request->getPathInfo(), '/');
-
-        /**
-         * Fail Fast
-         *
-         * There is no need to run this if it's an empty path
-         */
-        if (!$originalPath) {
+        if (empty($originalPath)) {
             return parent::match($request);
         }
 
-        // Copy the originalPath to workingPath so we can revert our changes later
-        $workingPath = $originalPath;
+        $found = false;
+        $frontNames = $this->_extractFrontNames($originalPath);
+        if (count($frontNames) > 0) {
+            // Deactivate admin 404 handler
+            $this->_applyNoRoute = false;
 
-        // Pull out the longest valid frontName, modifying workingPath in the process
-        $frontName = $this->_extractFrontName($workingPath);
+            foreach ($frontNames as $frontName => $workingPath) {
+                // Force usage of the frontName we detected
+                $request->setModuleName($frontName);
 
-        if (strpos($frontName, '/') === false) {
-            // Bypass request modification when there is not extended frontName match
-            return parent::match($request);
-        } else {
-            // Change request PATH_INFO to replace real frontName with fake one
-            $request->setPathInfo('[PARSED]/' . $workingPath);
+                // Change request PATH_INFO to replace real frontName with fake one
+                $request->setPathInfo('[PARSED]/' . $workingPath);
 
-            // Force usage of the frontName we detected
-            $request->setModuleName($frontName);
+                // Use detected frontName to try and resolve the request
+                $found = parent::match($request);
 
-            // Run the normal match() method
-            $result = parent::match($request);
+                // Reset request PATH_INFO (just in case)
+                $request->setPathInfo($originalPath);
 
-            // Reset request PATH_INFO (just in case)
-            $request->setPathInfo($originalPath);
+                // If found, stop looping
+                if ($found) {
+                    break;
+                }
 
-            return $result;
+                // Reset module name as a cleanup
+                $request->setModuleName(null);
+            }
+
+            // Reactivate admin 404 handler
+            $this->_applyNoRoute = true;
         }
+
+        if (!$found) {
+            $found = parent::match($request);
+        }
+
+        return $found;
     }
 
     /**
@@ -98,32 +102,38 @@ class Lokey_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
      * This method will support frontNames with '/' characters
      * It matches the longest possible valid frontName
      *
+     * NB: This WILL NOT match frontNames without a slash. This use case is handled via the parent match method
+     *
      * @param string $path
      *
-     * @return mixed|string
+     * @return array
      */
-    protected function _extractFrontName(&$path)
+    protected function _extractFrontNames($path)
     {
+        $found = array();
+
         $p = explode('/', $path);
 
         $frontName = array_shift($p);
         while (count($p) > 0) {
             $frontNames = preg_grep('/^' . preg_quote($frontName . '/' . $p[0], '/') . '.*/', $this->_routes);
-            if (count($frontNames) > 0) {
-                $frontName .= '/' . array_shift($p);
-            } else {
+            if (count($frontNames) == 0) {
                 break;
             }
+            $frontName .= '/' . array_shift($p);
+            $found[$frontName] = implode('/', $p);
         }
 
-        $path = implode('/', $p);
+        $found = array_reverse($found, true);
 
-        return $frontName;
+        return $found;
     }
 
     /**
      * Extend the addModule method to check for an "[admin]" prefix on frontNames
-     * and replace it with the real admin frontName.
+     * and replace it with the real admin frontName then check the frontname for
+     * the '/' character and set a flag if found.  This allows for a short-circuit
+     * if no modules used the extended functionality
      *
      * @param string $frontName
      * @param string $moduleName
@@ -156,5 +166,10 @@ class Lokey_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
         }
 
         return $this->_adminFrontName;
+    }
+
+    protected function _noRouteShouldBeApplied()
+    {
+        return $this->_applyNoRoute;
     }
 }
