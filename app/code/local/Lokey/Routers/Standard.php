@@ -12,7 +12,7 @@
  * @author     Lee Saferite <lee.saferite@lokeycoding.com>
  */
 
-class Lokey_Routers_Router_Admin extends Mage_Core_Controller_Varien_Router_Admin
+class Lokey_Routers_Standard extends Mage_Core_Controller_Varien_Router_Standard
 {
     /**
      * @var bool Flag indicating if the extended matching code should be active
@@ -20,16 +20,7 @@ class Lokey_Routers_Router_Admin extends Mage_Core_Controller_Varien_Router_Admi
     protected $_extendedSearchActive = false;
 
     /**
-     * @var string|null Cached copy of the admin frontName
-     */
-    protected $_adminFrontName;
-
-    /**
      * Match the request
-     *
-     * This is actually a wrapper for the real match method
-     * The wrapper adds the ability og having '/' characters
-     * in the frontName
      *
      * @param Zend_Controller_Request_Http $request
      *
@@ -92,16 +83,6 @@ class Lokey_Routers_Router_Admin extends Mage_Core_Controller_Varien_Router_Admi
         }
     }
 
-    /**
-     * Parse the PATH_INFO string passed looking for the best frontName
-     *
-     * This method will support frontNames with '/' characters
-     * It matches the longest possible valid frontName
-     *
-     * @param string $path
-     *
-     * @return mixed|string
-     */
     protected function _extractFrontName(&$path)
     {
         $p = explode('/', $path);
@@ -122,8 +103,7 @@ class Lokey_Routers_Router_Admin extends Mage_Core_Controller_Varien_Router_Admi
     }
 
     /**
-     * Extend the addModule method to check for an "[admin]" prefix on frontNames
-     * and replace it with the real admin frontName.
+     * Extend the addModule method to check for a "/" character in frontNames
      *
      * @param string $frontName
      * @param string $moduleName
@@ -133,28 +113,10 @@ class Lokey_Routers_Router_Admin extends Mage_Core_Controller_Varien_Router_Admi
      */
     public function addModule($frontName, $moduleName, $routeName)
     {
-        if (strpos($frontName, '[admin]/') === 0) {
-            $frontName = $this->_getAdminFrontName() . substr($frontName, 7);
-        }
-
         if (strpos($frontName, '/') !== false) {
             $this->_extendedSearchActive = true;
         }
 
         return parent::addModule($frontName, $moduleName, $routeName);
-    }
-
-    /**
-     * Grab the currently configured admin frontName and cache it locally
-     *
-     * @return string
-     */
-    protected function _getAdminFrontName()
-    {
-        if (!$this->_adminFrontName) {
-            $this->_adminFrontName = (string)Mage::getConfig()->getNode(Mage_Adminhtml_Helper_Data::XML_PATH_ADMINHTML_ROUTER_FRONTNAME);
-        }
-
-        return $this->_adminFrontName;
     }
 }
