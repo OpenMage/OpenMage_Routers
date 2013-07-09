@@ -143,12 +143,11 @@ class Lokey_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
      */
     public function addModule($frontName, $moduleName, $routeName)
     {
-        if (strpos($frontName, '[admin]/') === 0) {
-            $frontName = $this->_getAdminFrontName() . substr($frontName, 7);
-        }
-
         if (strpos($frontName, '/') !== false) {
             $this->_extendedSearchActive = true;
+            if (strpos($frontName, '[admin]/') === 0) {
+                $frontName = $this->_getAdminFrontName() . substr($frontName, 7);
+            }
         }
 
         return parent::addModule($frontName, $moduleName, $routeName);
