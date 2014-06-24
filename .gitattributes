@@ -1,6 +1,4 @@
 .gitignore    export-ignore
-.gitmodules    export-ignore
 .gitattributes    export-ignore
-build*    export-ignore
 
 /LICENSE.txt    export-ignore
