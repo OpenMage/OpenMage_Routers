@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <config>
     <modules>
-        <Lokey_Routers>
+        <OpenMage_Routers>
             <active>true</active>
             <codePool>community</codePool>
             <depends>
                 <Mage_Core/>
                 <Mage_Adminhtml/>
             </depends>
-        </Lokey_Routers>
+        </OpenMage_Routers>
     </modules>
 </config>

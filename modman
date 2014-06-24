@@ -1,2 +1,2 @@
-app/etc/modules/Lokey_Routers.xml
-app/code/community/Lokey/Routers
+app/etc/modules/OpenMage_Routers.xml
+app/code/community/OpenMage/Routers

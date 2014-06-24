@@ -6,13 +6,13 @@
  * that is bundled with this package in the file LICENSE.txt
  *
  * @category   Mage
- * @package    Lokey_Routers
+ * @package    OpenMage_Routers
  * @copyright  Copyright (c) 2012 Lokey Coding, LLC <ip@lokeycoding.com>
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  * @author     Lee Saferite <lee.saferite@lokeycoding.com>
  */
 
-class Lokey_Routers_Standard extends Mage_Core_Controller_Varien_Router_Standard
+class OpenMage_Routers_Standard extends Mage_Core_Controller_Varien_Router_Standard
 {
     /**
      * @var bool Flag indicating if the extended matching code should be active
