@@ -1,0 +1,16 @@
+{
+    "name": "openmage/openmage_routers",
+    "license": "OSL-3.0",
+    "type": "magento-module",
+    "description": "Magento router support for nested frontnames",
+    "require": {
+        "magento-hackathon/magento-composer-installer": "*"
+    },
+    "authors":[
+        {
+            "name":"Lee Saferite",
+            "email":"{firstname}.{lastname}@lokeycoding.com"
+        }
+    ]
+}
+
