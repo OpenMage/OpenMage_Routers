@@ -53,7 +53,9 @@ class OpenMage_Routers_Admin extends Mage_Core_Controller_Varien_Router_Admin
         }
 
         $originalPath = trim($request->getPathInfo(), '/');
-        if (empty($originalPath)) {
+
+        // There is no need to run this if it's an empty path
+        if ($originalPath === '') {
             return parent::match($request);
         }
 

@@ -45,53 +45,72 @@ class OpenMage_Routers_Standard extends Mage_Core_Controller_Varien_Router_Stand
         $originalPath = trim($request->getPathInfo(), '/');
 
         // There is no need to run this if it's an empty path
-        if (!$originalPath) {
+        if ($originalPath === '') {
             return parent::match($request);
         }
 
-        // Copy the originalPath to workingPath so we can revert our changes later
-        $workingPath = $originalPath;
-
-        // Pull out the longest valid frontName, modifying workingPath in the process
-        $frontName = $this->_extractFrontName($workingPath);
-
-        if (strpos($frontName, '/') === false) {
-            // Bypass request modification when there is no extended frontName match
-            return parent::match($request);
-        } else {
-            // Change request PATH_INFO to replace real frontName with fake one
-            $request->setPathInfo('[PARSED]/' . $workingPath);
-
+        $found = false;
+        $frontNames = $this->_extractFrontNames($originalPath);
+        foreach ($frontNames as $frontName => $workingPath) {
             // Force usage of the frontName we detected
             $request->setModuleName($frontName);
 
-            // Run the normal match() method
-            $result = parent::match($request);
+            // Change request PATH_INFO to replace real frontName with fake one
+            $request->setPathInfo('[PARSED]/' . $workingPath);
+
+            // Use detected frontName to try and resolve the request
+            $found = parent::match($request);
 
             // Reset request PATH_INFO (just in case)
             $request->setPathInfo($originalPath);
 
-            return $result;
+            // If found, stop looping
+            if ($found) {
+                break;
+            }
+
+            // Reset module name as a cleanup
+            $request->setModuleName(null);
         }
+
+        if (!$found) {
+            $found = parent::match($request);
+        }
+
+        return $found;
     }
 
-    protected function _extractFrontName(&$path)
+    /**
+     * Parse the PATH_INFO string passed looking for the best frontName
+     *
+     * This method will support frontNames with '/' characters
+     * It matches the longest possible valid frontName
+     *
+     * NB: This WILL NOT match frontNames without a slash. This use case is handled via the parent match method
+     *
+     * @param string $path
+     *
+     * @return array
+     */
+    protected function _extractFrontNames($path)
     {
+        $found = array();
+
         $p = explode('/', $path);
 
         $frontName = array_shift($p);
         while (count($p) > 0) {
             $frontNames = preg_grep('/^' . preg_quote($frontName . '/' . $p[0], '/') . '.*/', $this->_routes);
-            if (count($frontNames) > 0) {
-                $frontName .= '/' . array_shift($p);
-            } else {
+            if (count($frontNames) == 0) {
                 break;
             }
+            $frontName .= '/' . array_shift($p);
+            $found[$frontName] = implode('/', $p);
         }
 
-        $path = implode('/', $p);
+        $found = array_reverse($found, true);
 
-        return $frontName;
+        return $found;
     }
 
     /**
